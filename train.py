@@ -5,7 +5,7 @@ from util import *
 from network import *
 
 if __name == '__main__':
-	save_path = 'path'
+	save_path = 'path.pkl'
 
 	cost = train(save_path=save_path)
 	params, cost = pickle.load(open(save_path, 'rb'))

@@ -37,3 +37,10 @@ def predict(image, f1, f2, w3, w4, b, b2, b3, b4, stride_c = 1, pool = 2, stride
 	probs = softmax(out)
 
 	return np.argmax(probs), np.max(probs)
+
+def initializeFilter(size, scale = 1.0):
+	stddev = scale / np.sqrt(np.prod(size))
+	return np.random.normal(loc = 0, scale = stddev, size = size)
+
+def initializeWeight(size):
+	return np.randomm.strandard_normal(size=size) * 0.01

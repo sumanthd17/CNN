@@ -1,5 +1,8 @@
 import numpy as np
 
+def categoricalCrossEntropy(probs, label):
+	return -np.sum(label * np.log(probs))
+
 def convolution(image, mask, bias, stride):
 	(n_f, n_c_f, f, _) = mask.shape
 	n_c, in_dim, _ = image.shape
