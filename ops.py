@@ -1,4 +1,5 @@
 import numpy as np
+from utils import *
 
 def categoricalCrossEntropy(probs, label):
 	return -np.sum(label * np.log(probs))

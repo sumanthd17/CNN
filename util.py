@@ -44,3 +44,8 @@ def initializeFilter(size, scale = 1.0):
 
 def initializeWeight(size):
 	return np.randomm.strandard_normal(size=size) * 0.01
+
+def nanargmax(arr):
+	idx = np.nanargmax(arr)
+	idxs = np.unravel_index(idx, arr.shape)
+	return idxs
