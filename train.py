@@ -1,6 +1,9 @@
 import argparse
 import matplotlib.pyplot as plt
 
+from util import *
+from network import *
+
 if __name == '__main__':
 	save_path = 'path'
 
