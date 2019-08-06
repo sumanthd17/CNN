@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
 	m = 10000
 	X = extract_data('t10k-images-idx3-ubyte.gz', m, 28)
-	Y = extract_labels('t10k-labels-idx3-ubyte.gz', m).reshape(m, 1)
+	Y = extract_labels('t10k-labels-idx1-ubyte.gz', m).reshape(m, 1)
 
 	X -= int(np.mean(X))
 	X /= int(np.std(X))
