@@ -20,7 +20,7 @@ def conv(image, label, params, stride_c = 1, pool = 2, stride_p = 2):
 	(nf2, dim2, _) = pooled.shape
 	fc = pooled.reshape((nf2 * dim2 * dim2, 1))
 
-	z = we.dot(fc) + b3
+	z = w3.dot(fc) + b3
 	z[z<=0] = 0
 
 	out = w4.dot(z) + b4
@@ -39,8 +39,8 @@ def conv(image, label, params, stride_c = 1, pool = 2, stride_p = 2):
 	dw3 = dz.dot(fc.T)
 	db3 = np.sum(dz, axis = 1).reshape(b3.shape)
 
-	dfc = w3.dot(dz)
-	dpool = dfc.reshape(pooles.shape)
+	dfc = w3.T.dot(dz)
+	dpool = dfc.reshape(pooled.shape)
 
 	dconv2 = maxpoolBackward(dpool, conv2, pool, stride_p)
 	dconv2[conv2<=0] = 0
@@ -57,43 +57,43 @@ def conv(image, label, params, stride_c = 1, pool = 2, stride_p = 2):
 def adamGD(batch, num_classes, lr, dim, n_c, beta1, beta2, params, cost):
 	[f1, f2, w3, w4, b1, b2, b3, b4] = params
 
-	x = batch[:, 0:-1]
-	x = x.reshape(len(batch), n_c, dim, dim)
-	y = batcg[:, -1]
+	X = batch[:, 0:-1]
+	X = X.reshape(len(batch), n_c, dim, dim)
+	Y = batch[:, -1]
 
-	cost = 0
+	cost_ = 0
 	batch_size = len(batch)
 
 	df1 = np.zeros(f1.shape)
-    df2 = np.zeros(f2.shape)
-    dw3 = np.zeros(w3.shape)
-    dw4 = np.zeros(w4.shape)
-    db1 = np.zeros(b1.shape)
-    db2 = np.zeros(b2.shape)
-    db3 = np.zeros(b3.shape)
-    db4 = np.zeros(b4.shape)
-    
-    v1 = np.zeros(f1.shape)
-    v2 = np.zeros(f2.shape)
-    v3 = np.zeros(w3.shape)
-    v4 = np.zeros(w4.shape)
-    bv1 = np.zeros(b1.shape)
-    bv2 = np.zeros(b2.shape)
-    bv3 = np.zeros(b3.shape)
-    bv4 = np.zeros(b4.shape)
-    
-    s1 = np.zeros(f1.shape)
-    s2 = np.zeros(f2.shape)
-    s3 = np.zeros(w3.shape)
-    s4 = np.zeros(w4.shape)
-    bs1 = np.zeros(b1.shape)
-    bs2 = np.zeros(b2.shape)
-    bs3 = np.zeros(b3.shape)
-    bs4 = np.zeros(b4.shape)
+	df2 = np.zeros(f2.shape)
+	dw3 = np.zeros(w3.shape)
+	dw4 = np.zeros(w4.shape)
+	db1 = np.zeros(b1.shape)
+	db2 = np.zeros(b2.shape)
+	db3 = np.zeros(b3.shape)
+	db4 = np.zeros(b4.shape)
 
-    for i in range(batch_size):
-    	x = x[i]
-    	y = np.eye(num_classes)[int(y[i])].reshape(num_classes, 1)
+	v1 = np.zeros(f1.shape)
+	v2 = np.zeros(f2.shape)
+	v3 = np.zeros(w3.shape)
+	v4 = np.zeros(w4.shape)
+	bv1 = np.zeros(b1.shape)
+	bv2 = np.zeros(b2.shape)
+	bv3 = np.zeros(b3.shape)
+	bv4 = np.zeros(b4.shape)
+
+	s1 = np.zeros(f1.shape)
+	s2 = np.zeros(f2.shape)
+	s3 = np.zeros(w3.shape)
+	s4 = np.zeros(w4.shape)
+	bs1 = np.zeros(b1.shape)
+	bs2 = np.zeros(b2.shape)
+	bs3 = np.zeros(b3.shape)
+	bs4 = np.zeros(b4.shape)
+
+	for i in range(batch_size):
+		x = X[i]
+		y = np.eye(num_classes)[int(Y[i])].reshape(num_classes, 1)
 
 		grads, loss = conv(x, y, params, 1, 2, 2)
 		[df1_, df2_, dw3_, dw4_, db1_, db2_, db3_, db4_] = grads
@@ -127,7 +127,7 @@ def adamGD(batch, num_classes, lr, dim, n_c, beta1, beta2, params, cost):
 
 	v3 = beta1 * v3 + (1- beta1) * dw3 / batch_size
 	s3 = beta2 * s3 + (1 - beta2) * (dw3/batch_size)**2
-	w3 -= lr * v3 / np.sqrt(s1 + 1e-7)
+	w3 -= lr * v3 / np.sqrt(s3 + 1e-7)
 
 	bv3 = beta1 * bv3 + (1- beta1) * db3 / batch_size
 	bs3 = beta2 * bs3 + (1 - beta2) * (db3/batch_size)**2
@@ -150,41 +150,40 @@ def adamGD(batch, num_classes, lr, dim, n_c, beta1, beta2, params, cost):
 
 
 
-def train(num_classes=10, lr=0.01, beta1=0.95, beta2=0.99, img_dim=28, img_depth=1, f=5, batch_size=32, num_epochs=2, save_path='params.pkl'):
+def train(num_classes=10, lr=0.01, beta1=0.95, beta2=0.99, img_dim=28, img_depth=1, f=5, num_filt1=8, num_filt2=8, batch_size=32, num_epochs=2, save_path='params.pkl'):
 	m = 50000
-    X = extract_data('train-images-idx3-ubyte.gz', m, img_dim)
-    y_dash = extract_labels('train-labels-idx1-ubyte.gz', m).reshape(m,1)
-    X -= int(np.mean(X))
-    X /= int(np.std(X))
-    train_data = np.hstack((X,y_dash))
-    
-    np.random.shuffle(train_data)
+	X = extract_data('train-images-idx3-ubyte.gz', m, img_dim)
+	y_dash = extract_labels('train-labels-idx1-ubyte.gz', m).reshape(m,1)
+	X -= int(np.mean(X))
+	X /= int(np.std(X))
+	train_data = np.hstack((X,y_dash))
 
-    f1, f2, w3, w4 = (num_filt1, img_depth, f, f), (num_filt2, num_filt1, f, f), (128, 800), (10, 128)
-    f1 = initializeFilter(f1)
-    f2 = initializeFilter(f2)
-    w3 = initializeWeight(w3)
-    w4 = initializeWeight(w4)
+	np.random.shuffle(train_data)
 
-    b1 = np.zeros((f1.shape[0],1))
-    b2 = np.zeros((f2.shape[0],1))
-    b3 = np.zeros((w3.shape[0],1))
-    b4 = np.zeros((w4.shape[0],1))
+	f1, f2, w3, w4 = (num_filt1, img_depth, f, f), (num_filt2, num_filt1, f, f), (128, 800), (10, 128)
+	f1 = initializeFilter(f1)
+	f2 = initializeFilter(f2)
+	w3 = initializeWeight(w3)
+	w4 = initializeWeight(w4)
 
-    params = [f1, f2, w3, w4, b1, b2, b3, b4]
+	b1 = np.zeros((f1.shape[0],1))
+	b2 = np.zeros((f2.shape[0],1))
+	b3 = np.zeros((w3.shape[0],1))
+	b4 = np.zeros((w4.shape[0],1))
 
-    cost = []
+	params = [f1, f2, w3, w4, b1, b2, b3, b4]
 
-    print("Learning rate: " + str(lr) + " Batch size: " + str(batch_size))
+	cost = []
+	print("Learning rate: " + str(lr) + " Batch size: " + str(batch_size))
 
-    for epoch in range(num_epochs):
-    	np.random.shuffle(train_data)
-    	batches = [train_data[k: k + batch_size] for k in range(0, train_data.shappe[0], batch_size)]
+	for epoch in range(num_epochs):
+		np.random.shuffle(train_data)
+		batches = [train_data[k: k + batch_size] for k in range(0, train_data.shape[0], batch_size)]
 
-    	t = tqdm(batches)
-    	for x, batch in enumerate(t):
-    		params, cost = adamGD(batch, num_classes, lr, img_dim, img_depth, beta1, beta2, params, cost)
-    		t.set_description("Cost: %.2f" % (cost[-1]))
+		t = tqdm(batches)
+		for x, batch in enumerate(t):
+			params, cost = adamGD(batch, num_classes, lr, img_dim, img_depth, beta1, beta2, params, cost)
+			t.set_description("Cost: %.2f" % (cost[-1]))
 
 	to_save = [params, cost]
 

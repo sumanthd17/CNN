@@ -1,13 +1,13 @@
 import argparse
 import matplotlib.pyplot as plt
 
-from util import *
+from utils import *
 from network import *
 
-if __name == '__main__':
+if __name__ == '__main__':
 	save_path = 'path.pkl'
 
-	cost = train(save_path=save_path)
+	# cost = train(save_path=save_path)
 	params, cost = pickle.load(open(save_path, 'rb'))
 	[f1, f2, w3, w4, b1, b2, b3, b4] = params
 

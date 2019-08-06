@@ -10,7 +10,7 @@ def convolution(image, mask, bias, stride):
 
 	out_dim = int((in_dim - f) / stride) + 1
 
-	assert m_c == n_c_f, "Number of channels should match"
+	assert n_c == n_c_f, "Number of channels should match"
 
 	out = np.zeros((n_f, out_dim, out_dim))
 
@@ -19,7 +19,7 @@ def convolution(image, mask, bias, stride):
 		while curr_y + f <= in_dim:
 			curr_x = out_x = 0
 			while curr_x + f <= in_dim:
-				out[curr_f, out_y, out_x] = np.sum(filt[curr_f] * image[:,curr_y:curr_y+f, curr_x:curr_x+f]) + bias[curr_f]
+				out[curr_f, out_y, out_x] = np.sum(mask[curr_f] * image[:,curr_y:curr_y+f, curr_x:curr_x+f]) + bias[curr_f]
 				curr_x += stride
 				out_x += 1
 			curr_y += stride
@@ -28,7 +28,7 @@ def convolution(image, mask, bias, stride):
 	return out
 
 def maxpool(image, mask, stride):
-	n_c, h, w = imahe.shape
+	n_c, h, w = image.shape
 
 	out = int((h - mask)/stride) + 1
 
@@ -74,6 +74,11 @@ def convolutionBackward(dconv_prev, conv_in, filt, s):
 		dbias[curr_f] = np.sum(dconv_prev[curr_f])
 
 	return dout, dfilt, dbias
+
+def nanargmax(arr):
+	idx = np.nanargmax(arr)
+	idxs = np.unravel_index(idx, arr.shape)
+	return idxs
 
 def maxpoolBackward(dpool, org, f, s):
 	(n_c, org_dim, _) = org.shape
