@@ -15,18 +15,21 @@ if __name__ == '__main__':
 	plt.xlabel("Iterations")
 	plt.ylabel('cost')
 	plt.legend('loss', loc='upper right')
-	plt.show()
+	# plt.show()
 
-	x = extract_data('t10k-images-idx3-ubyte.gz', m, 28)
-	y = extract_labels('t10k-images-idx3-ubyte.gz', m).reshape(m, 1)
+	m = 10000
+	X = extract_data('t10k-images-idx3-ubyte.gz', m, 28)
+	Y = extract_labels('t10k-labels-idx3-ubyte.gz', m).reshape(m, 1)
 
-	x -= int(np.mean(x))
-	x /= int(np.std(x))
-	test_data = np.hstack(x, y)
+	X -= int(np.mean(X))
+	X /= int(np.std(X))
+	test_data = np.hstack((X, Y))
 
 	X = test_data[:, 0:-1]
-	X = x.reshape(len(test_data), 1, 28, 28)
-	y = test_data[:, -1]
+	X = X.reshape(len(test_data), 1, 28, 28)
+	Y = test_data[:, -1]
+
+	print(Y[:10])
 
 	correct = 0
 	digit_count = [0 for i in range(10)]
@@ -39,8 +42,8 @@ if __name__ == '__main__':
 	for i in t:
 		x = X[i]
 		pred, prob = predict(x, f1, f2, w3, w4, b1, b2, b3, b4)
-		digit_count[int(y[i])] += 1
-		if pred == y[i]:
+		digit_count[int(Y[i])] += 1
+		if pred == Y[i]:
 			correct += 1
 			digit_correct[pred] += 1
 
