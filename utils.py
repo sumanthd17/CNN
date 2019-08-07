@@ -47,3 +47,19 @@ def initializeFilter(size, scale = 1.0):
 
 def initializeWeight(size):
 	return np.random.standard_normal(size=size) * 0.01
+
+def zeroInitialization(params):
+	[f1, f2, w3, w4, b1, b2, b3, b4] = params
+
+	f1 = np.zeros(f1.shape)
+	f2 = np.zeros(f2.shape)
+	w3 = np.zeros(w3.shape)
+	w4 = np.zeros(w4.shape)
+	b1 = np.zeros(b1.shape)
+	b2 = np.zeros(b2.shape)
+	b3 = np.zeros(b3.shape)
+	b4 = np.zeros(b4.shape)
+
+	mask = [f1, f2, w3, w4, b1, b2, b3, b4]
+
+	return mask

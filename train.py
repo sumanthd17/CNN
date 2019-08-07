@@ -1,4 +1,3 @@
-import argparse
 import matplotlib.pyplot as plt
 
 from utils import *
@@ -7,7 +6,7 @@ from network import *
 if __name__ == '__main__':
 	save_path = 'path.pkl'
 
-	# cost = train(save_path=save_path)
+	cost = train(save_path=save_path)
 	params, cost = pickle.load(open(save_path, 'rb'))
 	[f1, f2, w3, w4, b1, b2, b3, b4] = params
 
@@ -50,7 +49,7 @@ if __name__ == '__main__':
 		t.set_description("Acc: %0.2f" % (float(correct/(i+1))*100))
 
 	print("Total Acc: %0.2f" % (float(correct/len(test_data)*100)))
-	x = np.arrange(10)
+	x = np.arange(10)
 	digit_recall = [x/y for x,y in zip(digit_correct, digit_count)]
 	plt.xlabel('digits')
 	plt.ylabel('recall')

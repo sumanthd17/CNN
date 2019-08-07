@@ -64,32 +64,9 @@ def adamGD(batch, num_classes, lr, dim, n_c, beta1, beta2, params, cost):
 	cost_ = 0
 	batch_size = len(batch)
 
-	df1 = np.zeros(f1.shape)
-	df2 = np.zeros(f2.shape)
-	dw3 = np.zeros(w3.shape)
-	dw4 = np.zeros(w4.shape)
-	db1 = np.zeros(b1.shape)
-	db2 = np.zeros(b2.shape)
-	db3 = np.zeros(b3.shape)
-	db4 = np.zeros(b4.shape)
-
-	v1 = np.zeros(f1.shape)
-	v2 = np.zeros(f2.shape)
-	v3 = np.zeros(w3.shape)
-	v4 = np.zeros(w4.shape)
-	bv1 = np.zeros(b1.shape)
-	bv2 = np.zeros(b2.shape)
-	bv3 = np.zeros(b3.shape)
-	bv4 = np.zeros(b4.shape)
-
-	s1 = np.zeros(f1.shape)
-	s2 = np.zeros(f2.shape)
-	s3 = np.zeros(w3.shape)
-	s4 = np.zeros(w4.shape)
-	bs1 = np.zeros(b1.shape)
-	bs2 = np.zeros(b2.shape)
-	bs3 = np.zeros(b3.shape)
-	bs4 = np.zeros(b4.shape)
+	[df1, df2, dw3, dw4, db1, db2, db3, db4] = zeroInitialization(params)
+	[v1, v2, v3, v4, bv1, bv2, bv3, bv4] = zeroInitialization(params)
+	[s1, s2, s3, s4, bs1, bs2, bs3, bs4] = zeroInitialization(params)
 
 	for i in range(batch_size):
 		x = X[i]
