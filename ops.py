@@ -10,7 +10,7 @@ def convolution(image, mask, bias, stride):
 
 	out_dim = int((in_dim - f) / stride) + 1
 
-	assert n_c == n_c_f, "Number of channels should match"
+	# assert n_c == n_c_f, "Number of channels should match"
 
 	out = np.zeros((n_f, out_dim, out_dim))
 

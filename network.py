@@ -8,6 +8,9 @@ from tqdm import tqdm
 def conv(image, label, params, stride_c = 1, pool = 2, stride_p = 2):
 	[f1, f2, w3, w4, b1, b2, b3, b4] = params
 
+	# Network Architecture
+	# conv1 -> conv2 -> maxpool -> fc -> fc
+
 	# forward propagation
 	conv1 = convolution(image, f1, b1, stride_c)
 	conv1[conv1<=0] = 0
@@ -25,6 +28,7 @@ def conv(image, label, params, stride_c = 1, pool = 2, stride_p = 2):
 
 	out = w4.dot(z) + b4
 
+	# softmax probabilities
 	probs = softmax(out)
 
 	loss = categoricalCrossEntropy(probs, label)
@@ -55,6 +59,7 @@ def conv(image, label, params, stride_c = 1, pool = 2, stride_p = 2):
 	return grads, loss
 
 def adamGD(batch, num_classes, lr, dim, n_c, beta1, beta2, params, cost):
+	# unoack the params
 	[f1, f2, w3, w4, b1, b2, b3, b4] = params
 
 	X = batch[:, 0:-1]
@@ -64,17 +69,21 @@ def adamGD(batch, num_classes, lr, dim, n_c, beta1, beta2, params, cost):
 	cost_ = 0
 	batch_size = len(batch)
 
+	# initialize momentum vairables
 	[df1, df2, dw3, dw4, db1, db2, db3, db4] = zeroInitialization(params)
 	[v1, v2, v3, v4, bv1, bv2, bv3, bv4] = zeroInitialization(params)
 	[s1, s2, s3, s4, bs1, bs2, bs3, bs4] = zeroInitialization(params)
 
 	for i in range(batch_size):
 		x = X[i]
+		# one-hot representation
 		y = np.eye(num_classes)[int(Y[i])].reshape(num_classes, 1)
 
+		# forward and backward pass
 		grads, loss = conv(x, y, params, 1, 2, 2)
 		[df1_, df2_, dw3_, dw4_, db1_, db2_, db3_, db4_] = grads
 
+		# update params
 		df1 += df1_
 		db1 += db1_
 		df2 += df2_
@@ -84,8 +93,10 @@ def adamGD(batch, num_classes, lr, dim, n_c, beta1, beta2, params, cost):
 		dw4 += dw4_
 		db4 += db4_
 
+		# update cost
 		cost_ += loss
 		
+	# Apply adamGD = RMSProp + SGD with momentum
 	v1 = beta1 * v1 + (1- beta1) * df1 / batch_size
 	s1 = beta2 * s1 + (1 - beta2) * (df1/batch_size)**2
 	f1 -= lr * v1 / np.sqrt(s1 + 1e-7)
@@ -121,6 +132,7 @@ def adamGD(batch, num_classes, lr, dim, n_c, beta1, beta2, params, cost):
 	cost_ = cost_ / batch_size
 	cost.append(cost_)
 
+	# update params
 	params = [f1, f2, w3, w4, b1, b2, b3, b4]
 
 	return params, cost
@@ -128,6 +140,7 @@ def adamGD(batch, num_classes, lr, dim, n_c, beta1, beta2, params, cost):
 
 
 def train(num_classes=10, lr=0.01, beta1=0.95, beta2=0.99, img_dim=28, img_depth=1, f=5, num_filt1=8, num_filt2=8, batch_size=32, num_epochs=2, save_path='params.pkl'):
+	# extract train data
 	m = 50000
 	X = extract_data('train-images-idx3-ubyte.gz', m, img_dim)
 	y_dash = extract_labels('train-labels-idx1-ubyte.gz', m).reshape(m,1)
@@ -135,14 +148,17 @@ def train(num_classes=10, lr=0.01, beta1=0.95, beta2=0.99, img_dim=28, img_depth
 	X /= int(np.std(X))
 	train_data = np.hstack((X,y_dash))
 
+	# shuffle data
 	np.random.shuffle(train_data)
 
+	# initialize filters
 	f1, f2, w3, w4 = (num_filt1, img_depth, f, f), (num_filt2, num_filt1, f, f), (128, 800), (10, 128)
 	f1 = initializeFilter(f1)
 	f2 = initializeFilter(f2)
 	w3 = initializeWeight(w3)
 	w4 = initializeWeight(w4)
 
+	# initialize bias
 	b1 = np.zeros((f1.shape[0],1))
 	b2 = np.zeros((f2.shape[0],1))
 	b3 = np.zeros((w3.shape[0],1))
@@ -153,17 +169,21 @@ def train(num_classes=10, lr=0.01, beta1=0.95, beta2=0.99, img_dim=28, img_depth
 	cost = []
 	print("Learning rate: " + str(lr) + " Batch size: " + str(batch_size))
 
+	# loop over all the train the data batch size 32
+	# total batches = 1563
 	for epoch in range(num_epochs):
 		np.random.shuffle(train_data)
 		batches = [train_data[k: k + batch_size] for k in range(0, train_data.shape[0], batch_size)]
 
 		t = tqdm(batches)
 		for x, batch in enumerate(t):
+			# adam gradient descent
 			params, cost = adamGD(batch, num_classes, lr, img_dim, img_depth, beta1, beta2, params, cost)
 			t.set_description("Cost: %.2f" % (cost[-1]))
 
 	to_save = [params, cost]
 
+	# saving the model
 	with open(save_path, 'wb') as file:
 		pickle.dump(to_save, file)
 
